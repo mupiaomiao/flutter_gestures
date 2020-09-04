@@ -1,4 +1,6 @@
 import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
+import 'package:vector_math/vector_math_64.dart' show Matrix4;
 
 enum UIGestureArenaType {
   /// 独立手势竞技场
@@ -24,25 +26,31 @@ class UIGestureArena {
   PointerRouter _pointerRouter;
   PointerRouter get pointerRouter =>
       _pointerRouter ??= type == UIGestureArenaType.Alone
-          ? GestureBinding.instance.pointerRouter
-          : PointerRouter();
+          ? _PointerRouter(_onAdd, _onRemove)
+          : GestureBinding.instance.pointerRouter;
 
   GestureArenaManager _manager;
   GestureArenaManager get manager =>
       _manager ??= type == UIGestureArenaType.Alone
-          ? GestureBinding.instance.gestureArena
-          : _GestureArenaManager(_onAdd);
+          ? GestureArenaManager()
+          : GestureBinding.instance.gestureArena;
 
   PointerSignalResolver _pointerSignalResolver;
   PointerSignalResolver get pointerSignalResolver =>
       _pointerSignalResolver ??= type == UIGestureArenaType.Alone
-          ? GestureBinding.instance.pointerSignalResolver
-          : PointerSignalResolver();
+          ? PointerSignalResolver()
+          : GestureBinding.instance.pointerSignalResolver;
 
-  /// 有手势加入竞技场，在GestureBinding.pointerRouter
-  /// 上添加监听，以便在所有点击测试完成后，触发本场手势竞争。
-  void _onAdd(int pointer) =>
+  final Map<int, int> _trakcedPointer = <int, int>{};
+
+  // 有手势加入竞技场，在GestureBinding.pointerRouter
+  // 上添加监听，以便在所有点击测试完成后，触发本场手势竞争。
+  void _onAdd(int pointer) {
+    _trakcedPointer.update(pointer, (value) => value + 1, ifAbsent: () {
       GestureBinding.instance.pointerRouter.addRoute(pointer, _onPointerRoute);
+      return 1;
+    });
+  }
 
   void _onPointerRoute(PointerEvent event) {
     pointerRouter.route(event);
@@ -53,22 +61,40 @@ class UIGestureArena {
     } else if (event is PointerSignalEvent) {
       pointerSignalResolver.resolve(event);
     }
-    // 移除监听
-    GestureBinding.instance.pointerRouter
-        .removeRoute(event.pointer, _onPointerRoute);
+  }
+
+  // 移除监听
+  void _onRemove(int pointer) {
+    final count = _trakcedPointer[pointer];
+    if (count != null) {
+      if (count > 1) {
+        _trakcedPointer[pointer] = count - 1;
+      } else {
+        _trakcedPointer.remove(pointer);
+        GestureBinding.instance.pointerRouter
+            .removeRoute(pointer, _onPointerRoute);
+      }
+    }
   }
 }
 
-class _GestureArenaManager extends GestureArenaManager {
-  _GestureArenaManager(this.onAdd);
-
+class _PointerRouter extends PointerRouter {
   final void Function(int pointer) onAdd;
+  final void Function(int pointer) onRemove;
+
+  _PointerRouter(this.onAdd, this.onRemove)
+      : assert(onAdd != null),
+        assert(onRemove != null);
 
   @override
-  GestureArenaEntry add(int pointer, GestureArenaMember member) {
-    if (onAdd != null) {
-      onAdd(pointer);
-    }
-    return super.add(pointer, member);
+  void addRoute(int pointer, PointerRoute route, [Matrix4 transform]) {
+    onAdd(pointer);
+    super.addRoute(pointer, route, transform);
+  }
+
+  @override
+  void removeRoute(int pointer, PointerRoute route) {
+    onRemove(pointer);
+    super.removeRoute(pointer, route);
   }
 }
