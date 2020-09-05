@@ -423,8 +423,27 @@ class UIRawGestureDetector extends StatefulWidget {
 class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
   UIGestureArena _gestureArena;
   SemanticsGestureDelegate _semantics;
+  final _excludeAreas = List<RenderBox>();
   Map<Type, UIGestureRecognizer> _recognizers =
       const <Type, UIGestureRecognizer>{};
+
+  void addExcludeArea(RenderBox area) {
+    _excludeAreas.add(area);
+    final ancestor =
+        context.findAncestorStateOfType<_UIRawGestureDetectorState>();
+    if (ancestor != null) {
+      ancestor.addExcludeArea(area);
+    }
+  }
+
+  void removeExcludeArea(RenderBox area) {
+    _excludeAreas.remove(area);
+    final ancestor =
+        context.findAncestorStateOfType<_UIRawGestureDetectorState>();
+    if (ancestor != null) {
+      ancestor.removeExcludeArea(area);
+    }
+  }
 
   @override
   void initState() {
@@ -561,7 +580,12 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
   Widget build(BuildContext context) {
     Widget result = Listener(
       child: widget.child,
-      onPointerDown: _handlePointerDownEvent,
+      onPointerDown: (PointerDownEvent event) {
+        for (final RenderBox child in _excludeAreas) {
+          if (child.size.contains(child.globalToLocal(event.position))) return;
+        }
+        _handlePointerDownEvent(event);
+      },
       behavior: widget.behavior ?? _defaultBehavior,
     );
     if (!widget.excludeFromSemantics) {
@@ -749,5 +773,49 @@ class _DefaultSemanticsGestureDelegate extends SemanticsGestureDelegate {
       if (verticalHandler != null) verticalHandler(details);
       if (panHandler != null) panHandler(details);
     };
+  }
+}
+
+class UIExcludeArea extends SingleChildRenderObjectWidget {
+  UIExcludeArea({Key key, Widget child}) : super(key: key, child: child);
+
+  @override
+  RenderProxyBox createRenderObject(BuildContext context) => RenderProxyBox();
+
+  @override
+  SingleChildRenderObjectElement createElement() => _UIExcludeAreaElement(this);
+}
+
+class _UIExcludeAreaElement extends SingleChildRenderObjectElement {
+  _UIExcludeAreaElement(UIExcludeArea widget) : super(widget);
+
+  @override
+  void mount(Element parent, newSlot) {
+    super.mount(parent, newSlot);
+    final ancestor = findAncestorStateOfType<_UIRawGestureDetectorState>();
+    if (ancestor != null) {
+      ancestor.addExcludeArea(renderObject as RenderBox);
+    }
+  }
+
+  @override
+  void update(SingleChildRenderObjectWidget newWidget) {
+    final ancestor = findAncestorStateOfType<_UIRawGestureDetectorState>();
+    if (ancestor != null) {
+      ancestor.removeExcludeArea(renderObject as RenderBox);
+    }
+    super.update(newWidget);
+    if (ancestor != null) {
+      ancestor.addExcludeArea(renderObject as RenderBox);
+    }
+  }
+
+  @override
+  void unmount() {
+    final ancestor = findAncestorStateOfType<_UIRawGestureDetectorState>();
+    if (ancestor != null) {
+      ancestor.removeExcludeArea(renderObject as RenderBox);
+    }
+    super.unmount();
   }
 }
