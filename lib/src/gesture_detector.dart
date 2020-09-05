@@ -427,24 +427,6 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
   Map<Type, UIGestureRecognizer> _recognizers =
       const <Type, UIGestureRecognizer>{};
 
-  void addExcludeArea(RenderBox area) {
-    _excludeAreas.add(area);
-    final ancestor =
-        context.findAncestorStateOfType<_UIRawGestureDetectorState>();
-    if (ancestor != null) {
-      ancestor.addExcludeArea(area);
-    }
-  }
-
-  void removeExcludeArea(RenderBox area) {
-    _excludeAreas.remove(area);
-    final ancestor =
-        context.findAncestorStateOfType<_UIRawGestureDetectorState>();
-    if (ancestor != null) {
-      ancestor.removeExcludeArea(area);
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -578,15 +560,27 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
 
   @override
   Widget build(BuildContext context) {
-    Widget result = Listener(
-      child: widget.child,
-      onPointerDown: (PointerDownEvent event) {
-        for (final RenderBox child in _excludeAreas) {
-          if (child.hasSize && child.size.contains(event.position)) return;
+    Widget result = NotificationListener<_ExcludeAreaNotification>(
+      onNotification: (notification) {
+        if (notification.oldRenderBox != null) {
+          _excludeAreas.remove(notification.oldRenderBox);
         }
-        _handlePointerDownEvent(event);
+        if (notification.newRenderBox != null &&
+            notification.newRenderBox != notification.oldRenderBox) {
+          _excludeAreas.add(notification.newRenderBox);
+        }
+        return false;
       },
-      behavior: widget.behavior ?? _defaultBehavior,
+      child: Listener(
+        child: widget.child,
+        onPointerDown: (PointerDownEvent event) {
+          for (final RenderBox child in _excludeAreas) {
+            if (child.hasSize && child.size.contains(event.position)) return;
+          }
+          _handlePointerDownEvent(event);
+        },
+        behavior: widget.behavior ?? _defaultBehavior,
+      ),
     );
     if (!widget.excludeFromSemantics) {
       result = _GestureSemantics(
@@ -791,31 +785,49 @@ class _UIExcludeAreaElement extends SingleChildRenderObjectElement {
 
   @override
   void mount(Element parent, newSlot) {
+    final oldRenderBox = renderObject as RenderBox;
     super.mount(parent, newSlot);
-    final ancestor = findAncestorStateOfType<_UIRawGestureDetectorState>();
-    if (ancestor != null) {
-      ancestor.addExcludeArea(renderObject as RenderBox);
-    }
+    final newRenderBox = renderObject as RenderBox;
+    _ExcludeAreaNotification(newRenderBox, oldRenderBox).dispatch(this);
+    assert(() {
+      print(
+          '$this: mount, old render object: $oldRenderBox, new render object: $newRenderBox');
+      return true;
+    }());
   }
 
   @override
   void update(SingleChildRenderObjectWidget newWidget) {
-    final ancestor = findAncestorStateOfType<_UIRawGestureDetectorState>();
-    if (ancestor != null) {
-      ancestor.removeExcludeArea(renderObject as RenderBox);
-    }
+    final oldRenderBox = renderObject as RenderBox;
     super.update(newWidget);
-    if (ancestor != null) {
-      ancestor.addExcludeArea(renderObject as RenderBox);
+    final newRenderBox = renderObject as RenderBox;
+    if (!identical(oldRenderBox, newRenderBox)) {
+      _ExcludeAreaNotification(newRenderBox, oldRenderBox).dispatch(this);
     }
+    assert(() {
+      print(
+          '$this: update, old render object: $oldRenderBox, new render object: $newRenderBox');
+      return true;
+    }());
   }
 
   @override
   void unmount() {
-    final ancestor = findAncestorStateOfType<_UIRawGestureDetectorState>();
-    if (ancestor != null) {
-      ancestor.removeExcludeArea(renderObject as RenderBox);
-    }
+    final oldRenderBox = renderObject as RenderBox;
+    _ExcludeAreaNotification(null, renderObject as RenderBox).dispatch(this);
     super.unmount();
+    final newRenderBox = renderObject as RenderBox;
+    assert(() {
+      print(
+          '$this: mount, old render object: $oldRenderBox, new render object: $newRenderBox');
+      return true;
+    }());
   }
+}
+
+class _ExcludeAreaNotification extends Notification {
+  final RenderBox newRenderBox;
+  final RenderBox oldRenderBox;
+
+  _ExcludeAreaNotification(this.newRenderBox, this.oldRenderBox);
 }
