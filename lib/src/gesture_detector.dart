@@ -582,7 +582,7 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
       child: widget.child,
       onPointerDown: (PointerDownEvent event) {
         for (final RenderBox child in _excludeAreas) {
-          if (child.size.contains(child.globalToLocal(event.position))) return;
+          if (child.hasSize && child.size.contains(event.position)) return;
         }
         _handlePointerDownEvent(event);
       },
