@@ -422,8 +422,8 @@ class UIRawGestureDetector extends StatefulWidget {
 
 class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
   UIGestureArena _gestureArena;
+  PointerDownEvent _pointerDownEvent;
   SemanticsGestureDelegate _semantics;
-  final _excludeAreas = List<RenderBox>();
   Map<Type, UIGestureRecognizer> _recognizers =
       const <Type, UIGestureRecognizer>{};
 
@@ -560,26 +560,23 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
 
   @override
   Widget build(BuildContext context) {
-    Widget result = NotificationListener<_ExcludeAreaNotification>(
+    Widget result = NotificationListener<_PointerDownNotification>(
       onNotification: (notification) {
-        if (notification.oldRenderBox != null) {
-          _excludeAreas.remove(notification.oldRenderBox);
-        }
-        if (notification.newRenderBox != null &&
-            notification.newRenderBox != notification.oldRenderBox) {
-          _excludeAreas.add(notification.newRenderBox);
-        }
+        // PointerDownEvent在UIExcludeArea范围中
+        _pointerDownEvent = notification.event;
         return false;
       },
       child: Listener(
         child: widget.child,
-        onPointerDown: (PointerDownEvent event) {
-          for (final RenderBox child in _excludeAreas) {
-            if (child.hasSize && child.size.contains(event.position)) return;
-          }
-          _handlePointerDownEvent(event);
-        },
         behavior: widget.behavior ?? _defaultBehavior,
+        onPointerDown: (PointerDownEvent event) {
+          if (_pointerDownEvent == null ||
+              _pointerDownEvent.pointer != event.pointer) {
+            // 没有点击在UIExcludeArea范围中
+            _handlePointerDownEvent(event);
+          }
+          _pointerDownEvent = null;
+        },
       ),
     );
     if (!widget.excludeFromSemantics) {
@@ -774,60 +771,22 @@ class UIExcludeArea extends SingleChildRenderObjectWidget {
   UIExcludeArea({Key key, Widget child}) : super(key: key, child: child);
 
   @override
-  RenderProxyBox createRenderObject(BuildContext context) => RenderProxyBox();
-
-  @override
-  SingleChildRenderObjectElement createElement() => _UIExcludeAreaElement(this);
-}
-
-class _UIExcludeAreaElement extends SingleChildRenderObjectElement {
-  _UIExcludeAreaElement(UIExcludeArea widget) : super(widget);
-
-  @override
-  void mount(Element parent, newSlot) {
-    final oldRenderBox = renderObject as RenderBox;
-    super.mount(parent, newSlot);
-    final newRenderBox = renderObject as RenderBox;
-    _ExcludeAreaNotification(newRenderBox, oldRenderBox).dispatch(this);
-    assert(() {
-      print(
-          '$this: mount, old render object: $oldRenderBox, new render object: $newRenderBox');
-      return true;
-    }());
+  RenderPointerListener createRenderObject(BuildContext context) {
+    return RenderPointerListener(onPointerDown: (event) {
+      _PointerDownNotification(event).dispatch(context);
+    });
   }
 
   @override
-  void update(SingleChildRenderObjectWidget newWidget) {
-    final oldRenderBox = renderObject as RenderBox;
-    super.update(newWidget);
-    final newRenderBox = renderObject as RenderBox;
-    if (!identical(oldRenderBox, newRenderBox)) {
-      _ExcludeAreaNotification(newRenderBox, oldRenderBox).dispatch(this);
-    }
-    assert(() {
-      print(
-          '$this: update, old render object: $oldRenderBox, new render object: $newRenderBox');
-      return true;
-    }());
-  }
-
-  @override
-  void unmount() {
-    final oldRenderBox = renderObject as RenderBox;
-    _ExcludeAreaNotification(null, renderObject as RenderBox).dispatch(this);
-    super.unmount();
-    final newRenderBox = renderObject as RenderBox;
-    assert(() {
-      print(
-          '$this: mount, old render object: $oldRenderBox, new render object: $newRenderBox');
-      return true;
-    }());
+  void updateRenderObject(BuildContext ctx, RenderPointerListener render) {
+    render.onPointerDown = (event) {
+      _PointerDownNotification(event).dispatch(ctx);
+    };
   }
 }
 
-class _ExcludeAreaNotification extends Notification {
-  final RenderBox newRenderBox;
-  final RenderBox oldRenderBox;
+class _PointerDownNotification extends Notification {
+  final PointerDownEvent event;
 
-  _ExcludeAreaNotification(this.newRenderBox, this.oldRenderBox);
+  _PointerDownNotification(this.event);
 }
