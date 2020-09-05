@@ -767,26 +767,29 @@ class _DefaultSemanticsGestureDelegate extends SemanticsGestureDelegate {
   }
 }
 
-class UIExcludeArea extends SingleChildRenderObjectWidget {
-  UIExcludeArea({Key key, Widget child}) : super(key: key, child: child);
+class UIExcludeArea extends StatelessWidget {
+  final Widget child;
+  final HitTestBehavior behavior;
+
+  const UIExcludeArea({
+    Key key,
+    this.child,
+    this.behavior = HitTestBehavior.deferToChild,
+  }) : super(key: key);
 
   @override
-  RenderPointerListener createRenderObject(BuildContext context) {
-    return RenderPointerListener(onPointerDown: (event) {
-      _PointerDownNotification(event).dispatch(context);
-    });
-  }
-
-  @override
-  void updateRenderObject(BuildContext ctx, RenderPointerListener render) {
-    render.onPointerDown = (event) {
-      _PointerDownNotification(event).dispatch(ctx);
-    };
+  Widget build(BuildContext context) {
+    return Listener(
+      child: child,
+      behavior: behavior,
+      onPointerDown: (event) {
+        _PointerDownNotification(event).dispatch(context);
+      },
+    );
   }
 }
 
 class _PointerDownNotification extends Notification {
   final PointerDownEvent event;
-
   _PointerDownNotification(this.event);
 }
