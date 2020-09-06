@@ -562,9 +562,10 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
   Widget build(BuildContext context) {
     Widget result = NotificationListener<_PointerDownNotification>(
       onNotification: (notification) {
+        notification.depth--;
         // PointerDownEvent在UIExcludeArea范围中
         _pointerDownEvent = notification.event;
-        return false;
+        return notification.depth == 0;
       },
       child: Listener(
         child: widget.child,
@@ -767,13 +768,19 @@ class _DefaultSemanticsGestureDelegate extends SemanticsGestureDelegate {
   }
 }
 
-class UIExcludeArea extends StatelessWidget {
+/// [UIRawGestureDetector]或[UIGestureDetector]的不会对
+/// [UIIgnoreGesture]所在区域进行手势检测，但是仍然可以参与
+/// 全局的手势检测。
+class UIIgnoreGesture extends StatelessWidget {
+  /// 向上传递层数，小于或等于0时，不限制层数
+  final int depth;
   final Widget child;
   final HitTestBehavior behavior;
 
-  const UIExcludeArea({
+  const UIIgnoreGesture({
     Key key,
     this.child,
+    this.depth = 0,
     this.behavior = HitTestBehavior.deferToChild,
   }) : super(key: key);
 
@@ -783,13 +790,14 @@ class UIExcludeArea extends StatelessWidget {
       child: child,
       behavior: behavior,
       onPointerDown: (event) {
-        _PointerDownNotification(event).dispatch(context);
+        _PointerDownNotification(event, depth ?? 0).dispatch(context);
       },
     );
   }
 }
 
 class _PointerDownNotification extends Notification {
+  int depth;
   final PointerDownEvent event;
-  _PointerDownNotification(this.event);
+  _PointerDownNotification(this.event, this.depth);
 }
