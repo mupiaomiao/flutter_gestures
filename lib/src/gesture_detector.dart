@@ -365,12 +365,11 @@ class UIGestureDetector extends StatelessWidget {
         },
       );
     }
-    final binding = gestureBinding ?? UIGestureArena.of(context);
     return UIRawGestureDetector(
       child: child,
       gestures: gestures,
       behavior: behavior,
-      gestureBinding: binding,
+      gestureBinding: gestureBinding,
       excludeFromSemantics: excludeFromSemantics,
     );
   }
@@ -431,6 +430,7 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
     final gestureBinding =
         (widget.gestureBinding ?? UIGestureArena.of(context)) ??
             UIGestureBinding();
+    assert(gestureBinding != null);
     if (_gestureBinding != gestureBinding) {
       _gestureBinding = gestureBinding;
       _syncAll(widget.gestures);
@@ -444,8 +444,11 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
       _semantics = widget.semantics ?? _DefaultSemanticsGestureDelegate(this);
     }
     if (widget.gestureBinding != oldWidget.gestureBinding) {
-      _gestureBinding = (widget.gestureBinding ?? UIGestureArena.of(context)) ??
-          UIGestureBinding();
+      final gestureBinding =
+          (widget.gestureBinding ?? UIGestureArena.of(context)) ??
+              UIGestureBinding();
+      assert(gestureBinding != null);
+      _gestureBinding = gestureBinding;
       _syncAll(widget.gestures);
     }
   }
@@ -514,13 +517,15 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         assert(gestures[type] != null);
         assert(gestures[type]._debugAssertTypeMatches(type));
         assert(!_recognizers.containsKey(type));
-        _recognizers[type] = gestures[type].constructor()
+        final recognizer = gestures[type].constructor()
           ..gestureBinding = _gestureBinding;
-        assert(_recognizers[type].runtimeType == type,
+        assert(recognizer.runtimeType == type,
             'UIGestureRecognizerFactory of type $type created a UIGestureRecognizer of type ${_recognizers[type].runtimeType}. The UIGestureRecognizerFactory must be specialized with the type of the class that it returns from its constructor method.');
-        gestures[type].initializer(_recognizers[type]);
+        gestures[type].initializer(recognizer);
+        _recognizers[type] = recognizer;
       }
     } else {
+      UIGestureRecognizer recognizer;
       for (final Type type in gestures.keys) {
         assert(gestures[type] != null);
         assert(gestures[type]._debugAssertTypeMatches(type));
@@ -528,14 +533,15 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         final oldRecognizer = oldRecognizers.remove(type);
         if (oldRecognizer != null && type == oldRecognizer.runtimeType) {
           // 复用recognizer
-          _recognizers[type] = oldRecognizer;
+          recognizer = oldRecognizer;
         } else {
-          _recognizers[type] = gestures[type].constructor()
+          recognizer = gestures[type].constructor()
             ..gestureBinding = _gestureBinding;
+          assert(recognizer.runtimeType == type,
+              'UIGestureRecognizerFactory of type $type created a UIGestureRecognizer of type ${_recognizers[type].runtimeType}. The UIGestureRecognizerFactory must be specialized with the type of the class that it returns from its constructor method.');
+          gestures[type].initializer(recognizer);
         }
-        assert(_recognizers[type].runtimeType == type,
-            'UIGestureRecognizerFactory of type $type created a UIGestureRecognizer of type ${_recognizers[type].runtimeType}. The UIGestureRecognizerFactory must be specialized with the type of the class that it returns from its constructor method.');
-        gestures[type].initializer(_recognizers[type]);
+        _recognizers[type] = recognizer;
       }
       for (final recognizer in oldRecognizers.values) {
         recognizer.dispose();
@@ -545,7 +551,7 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
 
   void _handlePointerDownEvent(PointerDownEvent event) {
     assert(_recognizers != null);
-    for (final UIGestureRecognizer recognizer in _recognizers.values) {
+    for (final recognizer in _recognizers.values) {
       recognizer.addPointer(event);
     }
   }
@@ -570,6 +576,10 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         notification.depth--;
         // PointerDownEvent在UIIgnoreGesture范围中
         _pointerDownEvent = notification.event;
+        assert(() {
+          print("Hit at UIIgnoreGesture.");
+          return true;
+        }());
         return notification.depth == 0;
       },
       child: Listener(
@@ -578,7 +588,10 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         onPointerDown: (PointerDownEvent event) {
           if (_pointerDownEvent == null ||
               _pointerDownEvent.pointer != event.pointer) {
-            // 没有点击在UIIgnoreGesture范围中
+            assert(() {
+              print("UIRawGestureDetector onPointerDown");
+              return true;
+            }());
             _handlePointerDownEvent(event);
           }
           _pointerDownEvent = null;
