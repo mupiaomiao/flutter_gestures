@@ -576,10 +576,6 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         notification.depth--;
         // PointerDownEvent在UIIgnoreGesture范围中
         _pointerDownEvent = notification.event;
-        assert(() {
-          print("Hit at UIIgnoreGesture.");
-          return true;
-        }());
         return notification.depth == 0;
       },
       child: Listener(
@@ -588,10 +584,6 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         onPointerDown: (PointerDownEvent event) {
           if (_pointerDownEvent == null ||
               _pointerDownEvent.pointer != event.pointer) {
-            assert(() {
-              print("UIRawGestureDetector onPointerDown");
-              return true;
-            }());
             _handlePointerDownEvent(event);
           }
           _pointerDownEvent = null;
