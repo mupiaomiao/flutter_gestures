@@ -5,26 +5,29 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 
 import 'team.dart';
-import 'arena.dart';
+import 'recognizer_extension.dart';
 
 abstract class UIGestureRecognizer extends GestureRecognizer {
   UIGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  })  : _gestureArena = gestureArena ?? UIGestureArena.globalArena,
-        super(kind: kind, debugOwner: debugOwner);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
-  UIGestureArena _gestureArena;
-  UIGestureArena get gestureArena => _gestureArena;
+  @override
+  void addPointer(PointerDownEvent event) {
+    assert(
+      gestureBinding != null,
+      "The $runtimeType must be integrated with UIRawGestureDetector.",
+    );
+    super.addPointer(event);
+  }
 }
 
 abstract class UIOneSequenceGestureRecognizer extends UIGestureRecognizer {
   UIOneSequenceGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   final Map<int, GestureArenaEntry> _entries = <int, GestureArenaEntry>{};
   final Set<int> _trackedPointers = HashSet<int>();
@@ -70,7 +73,7 @@ abstract class UIOneSequenceGestureRecognizer extends UIGestureRecognizer {
   void dispose() {
     resolve(GestureDisposition.rejected);
     for (final int pointer in _trackedPointers) {
-      gestureArena.pointerRouter.removeRoute(pointer, handleEvent);
+      gestureBinding.pointerRouter.removeRoute(pointer, handleEvent);
     }
     _trackedPointers.clear();
     assert(_entries.isEmpty);
@@ -89,12 +92,12 @@ abstract class UIOneSequenceGestureRecognizer extends UIGestureRecognizer {
 
   GestureArenaEntry _addPointerToArena(int pointer) {
     if (_team != null) return _team.add(pointer, this);
-    return gestureArena.manager.add(pointer, this);
+    return gestureBinding.gestureArena.add(pointer, this);
   }
 
   @protected
   void startTrackingPointer(int pointer, [Matrix4 transform]) {
-    gestureArena.pointerRouter.addRoute(pointer, handleEvent, transform);
+    gestureBinding.pointerRouter.addRoute(pointer, handleEvent, transform);
     _trackedPointers.add(pointer);
     assert(!_entries.containsValue(pointer));
     _entries[pointer] = _addPointerToArena(pointer);
@@ -103,7 +106,7 @@ abstract class UIOneSequenceGestureRecognizer extends UIGestureRecognizer {
   @protected
   void stopTrackingPointer(int pointer) {
     if (_trackedPointers.contains(pointer)) {
-      gestureArena.pointerRouter.removeRoute(pointer, handleEvent);
+      gestureBinding.pointerRouter.removeRoute(pointer, handleEvent);
       _trackedPointers.remove(pointer);
       if (_trackedPointers.isEmpty) didStopTrackingLastPointer(pointer);
     }
@@ -124,7 +127,6 @@ abstract class UIPrimaryPointerGestureRecognizer
     this.postAcceptSlopTolerance = kTouchSlop,
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
   })  : assert(
           preAcceptSlopTolerance == null || preAcceptSlopTolerance >= 0,
           'The preAcceptSlopTolerance must be positive or null',
@@ -133,7 +135,7 @@ abstract class UIPrimaryPointerGestureRecognizer
           postAcceptSlopTolerance == null || postAcceptSlopTolerance >= 0,
           'The postAcceptSlopTolerance must be positive or null',
         ),
-        super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+        super(kind: kind, debugOwner: debugOwner);
 
   final Duration deadline;
 

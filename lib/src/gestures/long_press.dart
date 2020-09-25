@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 
-import 'arena.dart';
 import 'recognizer.dart';
 
 class UILongPressGestureRecognizer extends UIPrimaryPointerGestureRecognizer {
@@ -9,11 +8,9 @@ class UILongPressGestureRecognizer extends UIPrimaryPointerGestureRecognizer {
     double postAcceptSlopTolerance,
     PointerDeviceKind kind,
     Object debugOwner,
-    UIGestureArena gestureArena,
   }) : super(
           kind: kind,
           debugOwner: debugOwner,
-          gestureArena: gestureArena,
           deadline: duration ?? kLongPressTimeout,
           postAcceptSlopTolerance: postAcceptSlopTolerance,
         );

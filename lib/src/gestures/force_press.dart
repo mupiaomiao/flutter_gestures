@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 
-import 'arena.dart';
 import 'recognizer.dart';
 
 enum _ForceState {
@@ -19,12 +18,11 @@ class UIForcePressGestureRecognizer extends UIOneSequenceGestureRecognizer {
     this.interpolation = _inverseLerp,
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
   })  : assert(startPressure != null),
         assert(peakPressure != null),
         assert(interpolation != null),
         assert(peakPressure > startPressure),
-        super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+        super(kind: kind, debugOwner: debugOwner);
 
   GestureForcePressStartCallback onStart;
 

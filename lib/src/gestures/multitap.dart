@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart' show required;
 
 import 'arena.dart';
 import 'recognizer.dart';
+import 'recognizer_extension.dart';
 
 class _CountdownZoned {
   _CountdownZoned({@required Duration duration}) : assert(duration != null) {
@@ -23,11 +24,11 @@ class _CountdownZoned {
 
 class _TapTracker {
   _TapTracker(
-    this.gestureArena, {
+    this.gestureBinding, {
     @required PointerDownEvent event,
     this.entry,
     @required Duration doubleTapMinTime,
-  })  : assert(gestureArena != null),
+  })  : assert(gestureBinding != null),
         assert(doubleTapMinTime != null),
         assert(event != null),
         assert(event.buttons != null),
@@ -42,21 +43,21 @@ class _TapTracker {
   final Offset _initialGlobalPosition;
   final int initialButtons;
   final _CountdownZoned _doubleTapMinTimeCountdown;
-  final UIGestureArena gestureArena;
+  final UIGestureBinding gestureBinding;
 
   bool _isTrackingPointer = false;
 
   void startTrackingPointer(PointerRoute route, Matrix4 transform) {
     if (!_isTrackingPointer) {
       _isTrackingPointer = true;
-      gestureArena.pointerRouter.addRoute(pointer, route, transform);
+      gestureBinding.pointerRouter.addRoute(pointer, route, transform);
     }
   }
 
   void stopTrackingPointer(PointerRoute route) {
     if (_isTrackingPointer) {
       _isTrackingPointer = false;
-      gestureArena.pointerRouter.removeRoute(pointer, route);
+      gestureBinding.pointerRouter.removeRoute(pointer, route);
     }
   }
 
@@ -78,8 +79,7 @@ class UIDoubleTapGestureRecognizer extends UIGestureRecognizer {
   UIDoubleTapGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   GestureDoubleTapCallback onDoubleTap;
 
@@ -118,10 +118,10 @@ class UIDoubleTapGestureRecognizer extends UIGestureRecognizer {
   void _trackFirstTap(PointerEvent event) {
     _stopDoubleTapTimer();
     final _TapTracker tracker = _TapTracker(
-      gestureArena,
+      gestureBinding,
       event: event as PointerDownEvent,
       doubleTapMinTime: kDoubleTapMinTime,
-      entry: gestureArena.manager.add(event.pointer, this),
+      entry: gestureBinding.gestureArena.add(event.pointer, this),
     );
     _trackers[event.pointer] = tracker;
     tracker.startTrackingPointer(_handleEvent, event.transform);
@@ -176,14 +176,14 @@ class UIDoubleTapGestureRecognizer extends UIGestureRecognizer {
       final _TapTracker tracker = _firstTap;
       _firstTap = null;
       _reject(tracker);
-      gestureArena.manager.release(tracker.pointer);
+      gestureBinding.gestureArena.release(tracker.pointer);
     }
     _clearTrackers();
   }
 
   void _registerFirstTap(_TapTracker tracker) {
     _startDoubleTapTimer();
-    gestureArena.manager.hold(tracker.pointer);
+    gestureBinding.gestureArena.hold(tracker.pointer);
     _freezeTracker(tracker);
     _trackers.remove(tracker.pointer);
     _clearTrackers();
@@ -230,17 +230,18 @@ class UIDoubleTapGestureRecognizer extends UIGestureRecognizer {
 
 class _TapGesture extends _TapTracker {
   _TapGesture(
-    UIGestureArena gestureArena, {
+    UIGestureBinding gestureBinding, {
     this.gestureRecognizer,
     PointerEvent event,
     Duration longTapDelay,
-  })  : assert(gestureArena != null),
+  })  : assert(gestureBinding != null),
         _lastPosition = OffsetPair.fromEventPosition(event),
         super(
-          gestureArena,
+          gestureBinding,
           event: event as PointerDownEvent,
           doubleTapMinTime: kDoubleTapMinTime,
-          entry: gestureArena.manager.add(event.pointer, gestureRecognizer),
+          entry:
+              gestureBinding.gestureArena.add(event.pointer, gestureRecognizer),
         ) {
     startTrackingPointer(handleEvent, event.transform);
     if (longTapDelay > Duration.zero) {
@@ -307,11 +308,10 @@ class _TapGesture extends _TapTracker {
 
 class UIMultiTapGestureRecognizer extends UIGestureRecognizer {
   UIMultiTapGestureRecognizer({
-    this.longTapDelay = Duration.zero,
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+    this.longTapDelay = Duration.zero,
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   GestureMultiTapDownCallback onTapDown;
 
@@ -331,7 +331,7 @@ class UIMultiTapGestureRecognizer extends UIGestureRecognizer {
   void addAllowedPointer(PointerEvent event) {
     assert(!_gestureMap.containsKey(event.pointer));
     _gestureMap[event.pointer] = _TapGesture(
-      gestureArena,
+      gestureBinding,
       gestureRecognizer: this,
       event: event,
       longTapDelay: longTapDelay,

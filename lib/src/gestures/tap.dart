@@ -2,19 +2,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 import 'package:vector_math/vector_math_64.dart' show Matrix4;
 
-import 'arena.dart';
 import 'recognizer.dart';
 
 abstract class UIBaseTapGestureRecognizer
     extends UIPrimaryPointerGestureRecognizer {
-  UIBaseTapGestureRecognizer({
-    Object debugOwner,
-    UIGestureArena gestureArena,
-  }) : super(
-          debugOwner: debugOwner,
-          deadline: kPressTimeout,
-          gestureArena: gestureArena,
-        );
+  UIBaseTapGestureRecognizer({Object debugOwner})
+      : super(debugOwner: debugOwner, deadline: kPressTimeout);
 
   bool _sentTapDown = false;
   bool _wonArenaForPrimaryPointer = false;
@@ -151,10 +144,7 @@ abstract class UIBaseTapGestureRecognizer
 }
 
 class UITapGestureRecognizer extends UIBaseTapGestureRecognizer {
-  UITapGestureRecognizer({
-    Object debugOwner,
-    UIGestureArena gestureArena,
-  }) : super(debugOwner: debugOwner, gestureArena: gestureArena);
+  UITapGestureRecognizer({Object debugOwner}) : super(debugOwner: debugOwner);
 
   GestureTapDownCallback onTapDown;
 

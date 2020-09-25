@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 
 import 'recognizer.dart';
+import 'recognizer_extension.dart';
 
 class _CombiningGestureArenaEntry implements GestureArenaEntry {
   _CombiningGestureArenaEntry(this._combiner, this._member);
@@ -58,8 +59,10 @@ class _CombiningGestureArenaMember extends GestureArenaMember {
     assert(_pointer == pointer);
     assert(member is UIGestureRecognizer);
     _members.add(member);
-    _entry ??=
-        (member as UIGestureRecognizer).gestureArena.manager.add(pointer, this);
+    _entry ??= (member as UIGestureRecognizer)
+        .gestureBinding
+        .gestureArena
+        .add(pointer, this);
     return _CombiningGestureArenaEntry(this, member);
   }
 

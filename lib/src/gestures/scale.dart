@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'arena.dart';
 import 'recognizer.dart';
 
 enum _ScaleState {
@@ -55,8 +54,7 @@ class UIScaleGestureRecognizer extends UIOneSequenceGestureRecognizer {
   UIScaleGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   GestureScaleStartCallback onStart;
 

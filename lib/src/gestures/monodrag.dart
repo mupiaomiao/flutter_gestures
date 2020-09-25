@@ -2,7 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'arena.dart';
 import 'recognizer.dart';
 
 enum _DragState {
@@ -15,10 +14,9 @@ abstract class UIDragGestureRecognizer extends UIOneSequenceGestureRecognizer {
   UIDragGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
     this.dragStartBehavior = DragStartBehavior.start,
   })  : assert(dragStartBehavior != null),
-        super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+        super(kind: kind, debugOwner: debugOwner);
 
   DragStartBehavior dragStartBehavior;
 
@@ -327,8 +325,7 @@ class UIVerticalDragGestureRecognizer extends UIDragGestureRecognizer {
   UIVerticalDragGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   @override
   bool isFlingGesture(VelocityEstimate estimate) {
@@ -356,8 +353,7 @@ class UIHorizontalDragGestureRecognizer extends UIDragGestureRecognizer {
   UIHorizontalDragGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   @override
   bool isFlingGesture(VelocityEstimate estimate) {
@@ -382,10 +378,7 @@ class UIHorizontalDragGestureRecognizer extends UIDragGestureRecognizer {
 }
 
 class UIPanGestureRecognizer extends UIDragGestureRecognizer {
-  UIPanGestureRecognizer({
-    Object debugOwner,
-    UIGestureArena gestureArena,
-  }) : super(debugOwner: debugOwner, gestureArena: gestureArena);
+  UIPanGestureRecognizer({Object debugOwner}) : super(debugOwner: debugOwner);
 
   @override
   bool isFlingGesture(VelocityEstimate estimate) {

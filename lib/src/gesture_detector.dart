@@ -12,12 +12,13 @@ import 'gestures/monodrag.dart';
 import 'gestures/long_press.dart';
 import 'gestures/recognizer.dart';
 import 'gestures/force_press.dart';
+import 'gestures/recognizer_extension.dart';
 
 @optionalTypeArgs
 abstract class UIGestureRecognizerFactory<T extends UIGestureRecognizer> {
   const UIGestureRecognizerFactory();
 
-  T constructor(UIGestureArena gestureArena);
+  T constructor();
 
   void initializer(T instance);
 
@@ -29,7 +30,7 @@ abstract class UIGestureRecognizerFactory<T extends UIGestureRecognizer> {
 }
 
 typedef UIGestureRecognizerFactoryConstructor<T extends UIGestureRecognizer> = T
-    Function(UIGestureArena gestureArena);
+    Function();
 
 typedef UIGestureRecognizerFactoryInitializer<T extends UIGestureRecognizer>
     = void Function(T instance);
@@ -46,7 +47,7 @@ class UIGestureRecognizerFactoryWithHandlers<T extends UIGestureRecognizer>
   final UIGestureRecognizerFactoryInitializer<T> _initializer;
 
   @override
-  T constructor(UIGestureArena gestureArena) => _constructor(gestureArena);
+  T constructor() => _constructor();
 
   @override
   void initializer(T instance) => _initializer(instance);
@@ -98,7 +99,7 @@ class UIGestureDetector extends StatelessWidget {
     this.onScaleUpdate,
     this.onScaleEnd,
     this.behavior,
-    this.gestureArena,
+    this.gestureBinding,
     this.excludeFromSemantics = false,
     this.dragStartBehavior = DragStartBehavior.start,
   })  : assert(excludeFromSemantics != null),
@@ -136,7 +137,7 @@ class UIGestureDetector extends StatelessWidget {
         super(key: key);
 
   final Widget child;
-  final UIGestureArena gestureArena;
+  final UIGestureBinding gestureBinding;
 
   final GestureTapDownCallback onTapDown;
   final GestureTapUpCallback onTapUp;
@@ -210,8 +211,7 @@ class UIGestureDetector extends StatelessWidget {
         onSecondaryTapCancel != null) {
       gestures[UITapGestureRecognizer] =
           UIGestureRecognizerFactoryWithHandlers<UITapGestureRecognizer>(
-        (UIGestureArena gestureArena) => UITapGestureRecognizer(
-            debugOwner: this, gestureArena: gestureArena),
+        () => UITapGestureRecognizer(debugOwner: this),
         (UITapGestureRecognizer instance) {
           instance
             ..onTapDown = onTapDown
@@ -229,8 +229,7 @@ class UIGestureDetector extends StatelessWidget {
     if (onDoubleTap != null) {
       gestures[UIDoubleTapGestureRecognizer] =
           UIGestureRecognizerFactoryWithHandlers<UIDoubleTapGestureRecognizer>(
-        (UIGestureArena gestureArena) => UIDoubleTapGestureRecognizer(
-            debugOwner: this, gestureArena: gestureArena),
+        () => UIDoubleTapGestureRecognizer(debugOwner: this),
         (UIDoubleTapGestureRecognizer instance) {
           instance.onDoubleTap = onDoubleTap;
         },
@@ -244,8 +243,7 @@ class UIGestureDetector extends StatelessWidget {
         onLongPressEnd != null) {
       gestures[UILongPressGestureRecognizer] =
           UIGestureRecognizerFactoryWithHandlers<UILongPressGestureRecognizer>(
-        (UIGestureArena gestureArena) => UILongPressGestureRecognizer(
-            debugOwner: this, gestureArena: gestureArena),
+        () => UILongPressGestureRecognizer(debugOwner: this),
         (UILongPressGestureRecognizer instance) {
           instance
             ..onLongPress = onLongPress
@@ -264,8 +262,7 @@ class UIGestureDetector extends StatelessWidget {
         onSecondaryLongPressEnd != null) {
       gestures[UILongPressGestureRecognizer] =
           UIGestureRecognizerFactoryWithHandlers<UILongPressGestureRecognizer>(
-        (UIGestureArena gestureArena) => UILongPressGestureRecognizer(
-            debugOwner: this, gestureArena: gestureArena),
+        () => UILongPressGestureRecognizer(debugOwner: this),
         (UILongPressGestureRecognizer instance) {
           instance
             ..onSecondaryLongPress = onSecondaryLongPress
@@ -285,8 +282,7 @@ class UIGestureDetector extends StatelessWidget {
       gestures[UIVerticalDragGestureRecognizer] =
           UIGestureRecognizerFactoryWithHandlers<
               UIVerticalDragGestureRecognizer>(
-        (UIGestureArena gestureArena) => UIVerticalDragGestureRecognizer(
-            debugOwner: this, gestureArena: gestureArena),
+        () => UIVerticalDragGestureRecognizer(debugOwner: this),
         (UIVerticalDragGestureRecognizer instance) {
           instance
             ..onDown = onVerticalDragDown
@@ -307,8 +303,7 @@ class UIGestureDetector extends StatelessWidget {
       gestures[UIHorizontalDragGestureRecognizer] =
           UIGestureRecognizerFactoryWithHandlers<
               UIHorizontalDragGestureRecognizer>(
-        (UIGestureArena gestureArena) => UIHorizontalDragGestureRecognizer(
-            debugOwner: this, gestureArena: gestureArena),
+        () => UIHorizontalDragGestureRecognizer(debugOwner: this),
         (UIHorizontalDragGestureRecognizer instance) {
           instance
             ..onDown = onHorizontalDragDown
@@ -328,8 +323,7 @@ class UIGestureDetector extends StatelessWidget {
         onPanCancel != null) {
       gestures[UIPanGestureRecognizer] =
           UIGestureRecognizerFactoryWithHandlers<UIPanGestureRecognizer>(
-        (UIGestureArena gestureArena) => UIPanGestureRecognizer(
-            debugOwner: this, gestureArena: gestureArena),
+        () => UIPanGestureRecognizer(debugOwner: this),
         (UIPanGestureRecognizer instance) {
           instance
             ..onDown = onPanDown
@@ -345,8 +339,7 @@ class UIGestureDetector extends StatelessWidget {
     if (onScaleStart != null || onScaleUpdate != null || onScaleEnd != null) {
       gestures[UIScaleGestureRecognizer] =
           UIGestureRecognizerFactoryWithHandlers<UIScaleGestureRecognizer>(
-        (UIGestureArena gestureArena) => UIScaleGestureRecognizer(
-            debugOwner: this, gestureArena: gestureArena),
+        () => UIScaleGestureRecognizer(debugOwner: this),
         (UIScaleGestureRecognizer instance) {
           instance
             ..onStart = onScaleStart
@@ -362,8 +355,7 @@ class UIGestureDetector extends StatelessWidget {
         onForcePressEnd != null) {
       gestures[UIForcePressGestureRecognizer] =
           UIGestureRecognizerFactoryWithHandlers<UIForcePressGestureRecognizer>(
-        (UIGestureArena gestureArena) => UIForcePressGestureRecognizer(
-            debugOwner: this, gestureArena: gestureArena),
+        () => UIForcePressGestureRecognizer(debugOwner: this),
         (UIForcePressGestureRecognizer instance) {
           instance
             ..onStart = onForcePressStart
@@ -373,12 +365,12 @@ class UIGestureDetector extends StatelessWidget {
         },
       );
     }
-
+    final binding = gestureBinding ?? UIGestureArena.of(context);
     return UIRawGestureDetector(
       child: child,
       gestures: gestures,
       behavior: behavior,
-      gestureArena: gestureArena,
+      gestureBinding: binding,
       excludeFromSemantics: excludeFromSemantics,
     );
   }
@@ -399,7 +391,7 @@ class UIRawGestureDetector extends StatefulWidget {
     this.behavior,
     this.excludeFromSemantics = false,
     this.semantics,
-    this.gestureArena,
+    this.gestureBinding,
   })  : assert(gestures != null),
         assert(excludeFromSemantics != null),
         super(key: key);
@@ -414,14 +406,14 @@ class UIRawGestureDetector extends StatefulWidget {
 
   final SemanticsGestureDelegate semantics;
 
-  final UIGestureArena gestureArena;
+  final UIGestureBinding gestureBinding;
 
   @override
   _UIRawGestureDetectorState createState() => _UIRawGestureDetectorState();
 }
 
 class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
-  UIGestureArena _gestureArena;
+  UIGestureBinding _gestureBinding;
   PointerDownEvent _pointerDownEvent;
   SemanticsGestureDelegate _semantics;
   Map<Type, UIGestureRecognizer> _recognizers =
@@ -430,9 +422,19 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
   @override
   void initState() {
     super.initState();
-    _gestureArena = widget.gestureArena ?? UIGestureArena();
     _semantics = widget.semantics ?? _DefaultSemanticsGestureDelegate(this);
-    _syncAll(widget.gestures);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final gestureBinding =
+        (widget.gestureBinding ?? UIGestureArena.of(context)) ??
+            UIGestureBinding();
+    if (_gestureBinding != gestureBinding) {
+      _gestureBinding = gestureBinding;
+      _syncAll(widget.gestures);
+    }
   }
 
   @override
@@ -441,10 +443,11 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
     if (!(oldWidget.semantics == null && widget.semantics == null)) {
       _semantics = widget.semantics ?? _DefaultSemanticsGestureDelegate(this);
     }
-    if (!identical(widget.gestureArena, oldWidget.gestureArena)) {
-      _gestureArena = widget.gestureArena ?? UIGestureArena();
+    if (widget.gestureBinding != oldWidget.gestureBinding) {
+      _gestureBinding = (widget.gestureBinding ?? UIGestureArena.of(context)) ??
+          UIGestureBinding();
+      _syncAll(widget.gestures);
     }
-    _syncAll(widget.gestures);
   }
 
   void replaceGestureRecognizers(
@@ -495,23 +498,24 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
     for (final UIGestureRecognizer recognizer in _recognizers.values) {
       recognizer.dispose();
     }
-    _gestureArena = null;
+    _gestureBinding = null;
     _recognizers = null;
     super.dispose();
   }
 
   void _syncAll(Map<Type, UIGestureRecognizerFactory> gestures) {
     assert(_recognizers != null);
-    assert(_gestureArena != null);
+    assert(_gestureBinding != null);
 
-    final Map<Type, UIGestureRecognizer> oldRecognizers = _recognizers;
+    final oldRecognizers = _recognizers;
     _recognizers = <Type, UIGestureRecognizer>{};
-    if ((oldRecognizers?.length ?? 0) == 0) {
+    if (oldRecognizers.length == 0) {
       for (final Type type in gestures.keys) {
         assert(gestures[type] != null);
         assert(gestures[type]._debugAssertTypeMatches(type));
         assert(!_recognizers.containsKey(type));
-        _recognizers[type] = gestures[type].constructor(_gestureArena);
+        _recognizers[type] = gestures[type].constructor()
+          ..gestureBinding = _gestureBinding;
         assert(_recognizers[type].runtimeType == type,
             'UIGestureRecognizerFactory of type $type created a UIGestureRecognizer of type ${_recognizers[type].runtimeType}. The UIGestureRecognizerFactory must be specialized with the type of the class that it returns from its constructor method.');
         gestures[type].initializer(_recognizers[type]);
@@ -522,17 +526,18 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         assert(gestures[type]._debugAssertTypeMatches(type));
         assert(!_recognizers.containsKey(type));
         final oldRecognizer = oldRecognizers.remove(type);
-        if (identical(_gestureArena, oldRecognizer.gestureArena)) {
+        if (oldRecognizer != null && type == oldRecognizer.runtimeType) {
+          // 复用recognizer
           _recognizers[type] = oldRecognizer;
         } else {
-          if (oldRecognizer != null) oldRecognizer.dispose();
-          _recognizers[type] = gestures[type].constructor(_gestureArena);
+          _recognizers[type] = gestures[type].constructor()
+            ..gestureBinding = _gestureBinding;
         }
         assert(_recognizers[type].runtimeType == type,
             'UIGestureRecognizerFactory of type $type created a UIGestureRecognizer of type ${_recognizers[type].runtimeType}. The UIGestureRecognizerFactory must be specialized with the type of the class that it returns from its constructor method.');
         gestures[type].initializer(_recognizers[type]);
       }
-      for (final UIGestureRecognizer recognizer in oldRecognizers.values) {
+      for (final recognizer in oldRecognizers.values) {
         recognizer.dispose();
       }
     }
@@ -563,7 +568,7 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
     Widget result = NotificationListener<_PointerDownNotification>(
       onNotification: (notification) {
         notification.depth--;
-        // PointerDownEvent在UIExcludeArea范围中
+        // PointerDownEvent在UIIgnoreGesture范围中
         _pointerDownEvent = notification.event;
         return notification.depth == 0;
       },
@@ -573,7 +578,7 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         onPointerDown: (PointerDownEvent event) {
           if (_pointerDownEvent == null ||
               _pointerDownEvent.pointer != event.pointer) {
-            // 没有点击在UIExcludeArea范围中
+            // 没有点击在UIIgnoreGesture范围中
             _handlePointerDownEvent(event);
           }
           _pointerDownEvent = null;

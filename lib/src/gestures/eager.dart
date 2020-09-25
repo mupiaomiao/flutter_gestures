@@ -1,13 +1,9 @@
 import 'package:flutter/gestures.dart';
 
-import 'arena.dart';
 import 'recognizer.dart';
 
 class UIEagerGestureRecognizer extends UIOneSequenceGestureRecognizer {
-  UIEagerGestureRecognizer({
-    PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, gestureArena: gestureArena);
+  UIEagerGestureRecognizer({PointerDeviceKind kind}) : super(kind: kind);
 
   @override
   void addAllowedPointer(PointerDownEvent event) {

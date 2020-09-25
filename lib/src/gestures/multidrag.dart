@@ -3,8 +3,8 @@ import 'dart:ui' show Offset;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 
-import 'arena.dart';
 import 'recognizer.dart';
+import 'recognizer_extension.dart';
 
 abstract class UIMultiDragPointerState {
   UIMultiDragPointerState(this.initialPosition)
@@ -138,8 +138,7 @@ abstract class UIMultiDragGestureRecognizer<T extends UIMultiDragPointerState>
   UIMultiDragGestureRecognizer({
     PointerDeviceKind kind,
     @required Object debugOwner,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   GestureMultiDragStartCallback onStart;
 
@@ -153,8 +152,8 @@ abstract class UIMultiDragGestureRecognizer<T extends UIMultiDragPointerState>
     assert(!_pointers.containsKey(event.pointer));
     final T state = createNewPointerState(event);
     _pointers[event.pointer] = state;
-    gestureArena.pointerRouter.addRoute(event.pointer, _handleEvent);
-    state._setArenaEntry(gestureArena.manager.add(event.pointer, this));
+    gestureBinding.pointerRouter.addRoute(event.pointer, _handleEvent);
+    state._setArenaEntry(gestureBinding.gestureArena.add(event.pointer, this));
   }
 
   @protected
@@ -224,7 +223,7 @@ abstract class UIMultiDragGestureRecognizer<T extends UIMultiDragPointerState>
       return;
     }
     assert(_pointers.containsKey(pointer));
-    gestureArena.pointerRouter.removeRoute(pointer, _handleEvent);
+    gestureBinding.pointerRouter.removeRoute(pointer, _handleEvent);
     _pointers.remove(pointer).dispose();
   }
 
@@ -258,8 +257,7 @@ class UIImmediateMultiDragGestureRecognizer
   UIImmediateMultiDragGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   @override
   _ImmediatePointerState createNewPointerState(PointerDownEvent event) {
@@ -291,8 +289,7 @@ class UIHorizontalMultiDragGestureRecognizer
   UIHorizontalMultiDragGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   @override
   _HorizontalPointerState createNewPointerState(PointerDownEvent event) {
@@ -324,8 +321,7 @@ class UIVerticalMultiDragGestureRecognizer
   UIVerticalMultiDragGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
-  }) : super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+  }) : super(kind: kind, debugOwner: debugOwner);
 
   @override
   _VerticalPointerState createNewPointerState(PointerDownEvent event) {
@@ -397,12 +393,11 @@ class _DelayedPointerState extends UIMultiDragPointerState {
 class UIDelayedMultiDragGestureRecognizer
     extends UIMultiDragGestureRecognizer<_DelayedPointerState> {
   UIDelayedMultiDragGestureRecognizer({
-    this.delay = kLongPressTimeout,
     Object debugOwner,
     PointerDeviceKind kind,
-    UIGestureArena gestureArena,
+    this.delay = kLongPressTimeout,
   })  : assert(delay != null),
-        super(kind: kind, debugOwner: debugOwner, gestureArena: gestureArena);
+        super(kind: kind, debugOwner: debugOwner);
 
   final Duration delay;
 
