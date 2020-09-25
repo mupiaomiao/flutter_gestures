@@ -531,10 +531,12 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         assert(gestures[type]._debugAssertTypeMatches(type));
         assert(!_recognizers.containsKey(type));
         final oldRecognizer = oldRecognizers.remove(type);
-        if (oldRecognizer != null) {
+        if (oldRecognizer != null &&
+            oldRecognizer.gestureBinding == _gestureBinding) {
           // 复用recognizer
-          recognizer = oldRecognizer..gestureBinding = _gestureBinding;
+          recognizer = oldRecognizer;
         } else {
+          if (oldRecognizer != null) oldRecognizer.dispose();
           recognizer = gestures[type].constructor()
             ..gestureBinding = _gestureBinding;
           assert(recognizer.runtimeType == type,
