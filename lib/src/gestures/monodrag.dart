@@ -16,24 +16,16 @@ abstract class UIDragGestureRecognizer extends UIOneSequenceGestureRecognizer {
     PointerDeviceKind kind,
     this.dragStartBehavior = DragStartBehavior.start,
   })  : assert(dragStartBehavior != null),
-        super(kind: kind, debugOwner: debugOwner);
+        super(debugOwner: debugOwner, kind: kind);
 
   DragStartBehavior dragStartBehavior;
-
   GestureDragDownCallback onDown;
-
   GestureDragStartCallback onStart;
-
   GestureDragUpdateCallback onUpdate;
-
   GestureDragEndCallback onEnd;
-
   GestureDragCancelCallback onCancel;
-
   double minFlingDistance;
-
   double minFlingVelocity;
-
   double maxFlingVelocity;
 
   _DragState _state = _DragState.ready;
@@ -42,9 +34,7 @@ abstract class UIDragGestureRecognizer extends UIOneSequenceGestureRecognizer {
   Duration _lastPendingEventTimestamp;
   int _initialButtons;
   Matrix4 _lastTransform;
-
   double _globalDistanceMoved;
-
   bool isFlingGesture(VelocityEstimate estimate);
 
   Offset _getDeltaForDetails(Offset delta);
@@ -177,8 +167,7 @@ abstract class UIDragGestureRecognizer extends UIOneSequenceGestureRecognizer {
         );
         final OffsetPair updateDelta =
             OffsetPair(local: localUpdateDelta, global: globalUpdateDelta);
-        final OffsetPair correctedPosition = _initialPosition +
-            updateDelta; // Only adds delta for down behaviour
+        final OffsetPair correctedPosition = _initialPosition + updateDelta;
         _checkUpdate(
           sourceTimeStamp: timestamp,
           delta: localUpdateDelta,
@@ -325,7 +314,7 @@ class UIVerticalDragGestureRecognizer extends UIDragGestureRecognizer {
   UIVerticalDragGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-  }) : super(kind: kind, debugOwner: debugOwner);
+  }) : super(debugOwner: debugOwner, kind: kind);
 
   @override
   bool isFlingGesture(VelocityEstimate estimate) {
@@ -353,7 +342,7 @@ class UIHorizontalDragGestureRecognizer extends UIDragGestureRecognizer {
   UIHorizontalDragGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-  }) : super(kind: kind, debugOwner: debugOwner);
+  }) : super(debugOwner: debugOwner, kind: kind);
 
   @override
   bool isFlingGesture(VelocityEstimate estimate) {

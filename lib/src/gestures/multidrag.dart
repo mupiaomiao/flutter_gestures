@@ -40,7 +40,6 @@ abstract class UIMultiDragPointerState {
       _velocityTracker.addPosition(event.timeStamp, event.position);
     if (_client != null) {
       assert(pendingDelta == null);
-      // Call client last to avoid reentrancy.
       _client.update(DragUpdateDetails(
         sourceTimeStamp: event.timeStamp,
         delta: event.delta,
@@ -84,7 +83,6 @@ abstract class UIMultiDragPointerState {
     );
     _pendingDelta = null;
     _lastPendingEventTimestamp = null;
-    // Call client last to avoid reentrancy.
     _client.update(details);
   }
 
@@ -96,7 +94,6 @@ abstract class UIMultiDragPointerState {
           DragEndDetails(velocity: _velocityTracker.getVelocity());
       final Drag client = _client;
       _client = null;
-      // Call client last to avoid reentrancy.
       client.end(details);
     } else {
       assert(pendingDelta != null);
@@ -111,7 +108,6 @@ abstract class UIMultiDragPointerState {
       assert(pendingDelta == null);
       final Drag client = _client;
       _client = null;
-      // Call client last to avoid reentrancy.
       client.cancel();
     } else {
       assert(pendingDelta != null);
@@ -120,7 +116,6 @@ abstract class UIMultiDragPointerState {
     }
   }
 
-  /// Releases any resources used by the object.
   @protected
   @mustCallSuper
   void dispose() {
@@ -136,9 +131,9 @@ abstract class UIMultiDragPointerState {
 abstract class UIMultiDragGestureRecognizer<T extends UIMultiDragPointerState>
     extends UIGestureRecognizer {
   UIMultiDragGestureRecognizer({
-    PointerDeviceKind kind,
     @required Object debugOwner,
-  }) : super(kind: kind, debugOwner: debugOwner);
+    PointerDeviceKind kind,
+  }) : super(debugOwner: debugOwner, kind: kind);
 
   GestureMultiDragStartCallback onStart;
 
@@ -215,7 +210,7 @@ abstract class UIMultiDragGestureRecognizer<T extends UIMultiDragPointerState>
       assert(state != null);
       state.rejected();
       _removeState(pointer);
-    } // else we already preemptively forgot about it (e.g. we got an up event)
+    }
   }
 
   void _removeState(int pointer) {

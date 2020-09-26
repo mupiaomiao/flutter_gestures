@@ -3,18 +3,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 
 class UIGestureBinding {
-  UIGestureBinding();
+  UIGestureBinding() {
+    _pointerRouter = UIPointerRouter(_onPointerRoute);
+  }
 
   UIPointerRouter _pointerRouter;
-  UIPointerRouter get pointerRouter => _pointerRouter ??=
-      UIPointerRouter(onAddRoute: _onAddRoute, onRemoveRoute: _onRemoveRoute);
-
+  UIPointerRouter get pointerRouter => _pointerRouter;
   final GestureArenaManager gestureArena = GestureArenaManager();
   final PointerSignalResolver pointerSignalResolver = PointerSignalResolver();
-
-  void _onAddRoute(int pointer) {
-    GestureBinding.instance.pointerRouter.addRoute(pointer, _onPointerRoute);
-  }
 
   void _onPointerRoute(PointerEvent event) {
     pointerRouter.route(event);
@@ -25,10 +21,6 @@ class UIGestureBinding {
     } else if (event is PointerSignalEvent) {
       pointerSignalResolver.resolve(event);
     }
-  }
-
-  void _onRemoveRoute(int pointer) {
-    GestureBinding.instance.pointerRouter.removeRoute(pointer, _onPointerRoute);
   }
 }
 
@@ -80,10 +72,9 @@ class _UIGestureArenaScope extends InheritedWidget {
 }
 
 class UIPointerRouter {
-  final void Function(int pointer) onAddRoute;
-  final void Function(int pointer) onRemoveRoute;
+  final PointerRoute pointerRoute;
 
-  UIPointerRouter({this.onAddRoute, this.onRemoveRoute});
+  UIPointerRouter(this.pointerRoute) : assert(pointerRoute != null);
 
   final Map<int, Map<PointerRoute, Matrix4>> _routeMap =
       <int, Map<PointerRoute, Matrix4>>{};
@@ -92,8 +83,12 @@ class UIPointerRouter {
     final Map<PointerRoute, Matrix4> routes = _routeMap.putIfAbsent(
       pointer,
       () {
-        if (onAddRoute != null) onAddRoute(pointer);
-        return <PointerRoute, Matrix4>{};
+        final routes = <PointerRoute, Matrix4>{};
+        GestureBinding.instance.pointerRouter.addRoute(
+          pointer,
+          pointerRoute,
+        );
+        return routes;
       },
     );
     assert(!routes.containsKey(route));
@@ -105,9 +100,14 @@ class UIPointerRouter {
     final Map<PointerRoute, Matrix4> routes = _routeMap[pointer];
     assert(routes.containsKey(route));
     routes.remove(route);
+    assert(!routes.containsKey(route));
     if (routes.isEmpty) {
+      GestureBinding.instance.pointerRouter.removeRoute(
+        pointer,
+        pointerRoute,
+      );
       _routeMap.remove(pointer);
-      if (onRemoveRoute != null) onRemoveRoute(pointer);
+      assert(!_routeMap.containsKey(pointer));
     }
   }
 

@@ -22,7 +22,7 @@ class UIForcePressGestureRecognizer extends UIOneSequenceGestureRecognizer {
         assert(peakPressure != null),
         assert(interpolation != null),
         assert(peakPressure > startPressure),
-        super(kind: kind, debugOwner: debugOwner);
+        super(debugOwner: debugOwner, kind: kind);
 
   GestureForcePressStartCallback onStart;
 
@@ -73,12 +73,7 @@ class UIForcePressGestureRecognizer extends UIOneSequenceGestureRecognizer {
 
       final double pressure =
           interpolation(event.pressureMin, event.pressureMax, event.pressure);
-      assert((pressure >= 0.0 &&
-                  pressure <=
-                      1.0) || // Interpolated pressure must be between 1.0 and 0.0...
-              pressure
-                  .isNaN // and interpolation may return NaN for values it doesn't want to support...
-          );
+      assert((pressure >= 0.0 && pressure <= 1.0) || pressure.isNaN);
 
       _lastPosition = OffsetPair.fromEventPosition(event);
       _lastPressure = pressure;
@@ -91,8 +86,6 @@ class UIForcePressGestureRecognizer extends UIOneSequenceGestureRecognizer {
           resolve(GestureDisposition.rejected);
         }
       }
-      // In case this is the only gesture detector we still don't want to start
-      // the gesture until the pressure is greater than the startPressure.
       if (pressure > startPressure && _state == _ForceState.accepted) {
         _state = _ForceState.started;
         if (onStart != null) {
@@ -183,8 +176,6 @@ class UIForcePressGestureRecognizer extends UIOneSequenceGestureRecognizer {
     assert(min <= max);
     double value = (t - min) / (max - min);
 
-    // If the device incorrectly reports a pressure outside of pressureMin
-    // and pressureMax, we still want this recognizer to respond normally.
     if (!value.isNaN) value = value.clamp(0.0, 1.0) as double;
     return value;
   }

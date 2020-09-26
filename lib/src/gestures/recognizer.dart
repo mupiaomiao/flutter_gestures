@@ -27,7 +27,7 @@ abstract class UIOneSequenceGestureRecognizer extends UIGestureRecognizer {
   UIOneSequenceGestureRecognizer({
     Object debugOwner,
     PointerDeviceKind kind,
-  }) : super(kind: kind, debugOwner: debugOwner);
+  }) : super(debugOwner: debugOwner, kind: kind);
 
   final Map<int, GestureArenaEntry> _entries = <int, GestureArenaEntry>{};
   final Set<int> _trackedPointers = HashSet<int>();
@@ -72,16 +72,16 @@ abstract class UIOneSequenceGestureRecognizer extends UIGestureRecognizer {
   @override
   void dispose() {
     resolve(GestureDisposition.rejected);
-    for (final int pointer in _trackedPointers) {
+    for (final int pointer in _trackedPointers)
       gestureBinding.pointerRouter.removeRoute(pointer, handleEvent);
-    }
     _trackedPointers.clear();
     assert(_entries.isEmpty);
     super.dispose();
   }
 
-  UIGestureArenaTeam _team;
   UIGestureArenaTeam get team => _team;
+  UIGestureArenaTeam _team;
+
   set team(UIGestureArenaTeam value) {
     assert(value != null);
     assert(_entries.isEmpty);
@@ -135,20 +135,14 @@ abstract class UIPrimaryPointerGestureRecognizer
           postAcceptSlopTolerance == null || postAcceptSlopTolerance >= 0,
           'The postAcceptSlopTolerance must be positive or null',
         ),
-        super(kind: kind, debugOwner: debugOwner);
+        super(debugOwner: debugOwner, kind: kind);
 
   final Duration deadline;
-
   final double preAcceptSlopTolerance;
-
   final double postAcceptSlopTolerance;
-
   GestureRecognizerState state = GestureRecognizerState.ready;
-
   int primaryPointer;
-
   OffsetPair initialPosition;
-
   bool _gestureAccepted = false;
   Timer _timer;
 

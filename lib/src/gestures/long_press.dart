@@ -9,36 +9,26 @@ class UILongPressGestureRecognizer extends UIPrimaryPointerGestureRecognizer {
     PointerDeviceKind kind,
     Object debugOwner,
   }) : super(
-          kind: kind,
-          debugOwner: debugOwner,
           deadline: duration ?? kLongPressTimeout,
           postAcceptSlopTolerance: postAcceptSlopTolerance,
+          kind: kind,
+          debugOwner: debugOwner,
         );
 
   bool _longPressAccepted = false;
   OffsetPair _longPressOrigin;
-
   int _initialButtons;
 
   GestureLongPressCallback onLongPress;
-
-  GestureLongPressStartCallback onLongPressStart;
-
-  GestureLongPressMoveUpdateCallback onLongPressMoveUpdate;
-
   GestureLongPressUpCallback onLongPressUp;
-
   GestureLongPressEndCallback onLongPressEnd;
-
   GestureLongPressCallback onSecondaryLongPress;
-
-  GestureLongPressStartCallback onSecondaryLongPressStart;
-
-  GestureLongPressMoveUpdateCallback onSecondaryLongPressMoveUpdate;
-
+  GestureLongPressStartCallback onLongPressStart;
   GestureLongPressUpCallback onSecondaryLongPressUp;
-
   GestureLongPressEndCallback onSecondaryLongPressEnd;
+  GestureLongPressStartCallback onSecondaryLongPressStart;
+  GestureLongPressMoveUpdateCallback onLongPressMoveUpdate;
+  GestureLongPressMoveUpdateCallback onSecondaryLongPressMoveUpdate;
 
   VelocityTracker _velocityTracker;
 
