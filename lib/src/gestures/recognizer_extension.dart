@@ -1,12 +1,12 @@
 import 'arena.dart';
 import 'recognizer.dart';
 
-final _expando = Expando<UIGestureBinding>();
+final _expando = Expando<UIGestureArena>();
 
 extension RecognizerExtension on UIGestureRecognizer {
-  UIGestureBinding get gestureBinding => _expando[this];
-  set gestureBinding(UIGestureBinding value) {
-    if (gestureBinding == value) return;
+  UIGestureArena get gestureArena => _expando[this];
+  set gestureArena(UIGestureArena value) {
+    if (gestureArena == value) return;
     _expando[this] = value;
   }
 }

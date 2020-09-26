@@ -99,7 +99,7 @@ class UIGestureDetector extends StatelessWidget {
     this.onScaleUpdate,
     this.onScaleEnd,
     this.behavior,
-    this.gestureBinding,
+    UIGestureArena gestureArena,
     this.excludeFromSemantics = false,
     this.dragStartBehavior = DragStartBehavior.start,
   })  : assert(excludeFromSemantics != null),
@@ -134,10 +134,11 @@ class UIGestureDetector extends StatelessWidget {
           }
           return true;
         }()),
+        gestureArena = gestureArena ?? UIGestureArena(),
         super(key: key);
 
   final Widget child;
-  final UIGestureBinding gestureBinding;
+  final UIGestureArena gestureArena;
 
   final GestureTapDownCallback onTapDown;
   final GestureTapUpCallback onTapUp;
@@ -369,7 +370,7 @@ class UIGestureDetector extends StatelessWidget {
       child: child,
       gestures: gestures,
       behavior: behavior,
-      gestureBinding: gestureBinding,
+      gestureArena: gestureArena,
       excludeFromSemantics: excludeFromSemantics,
     );
   }
@@ -383,16 +384,17 @@ class UIGestureDetector extends StatelessWidget {
 }
 
 class UIRawGestureDetector extends StatefulWidget {
-  const UIRawGestureDetector({
+  UIRawGestureDetector({
     Key key,
     this.child,
-    this.gestures = const <Type, UIGestureRecognizerFactory>{},
     this.behavior,
-    this.excludeFromSemantics = false,
     this.semantics,
-    this.gestureBinding,
+    UIGestureArena gestureArena,
+    this.excludeFromSemantics = false,
+    this.gestures = const <Type, UIGestureRecognizerFactory>{},
   })  : assert(gestures != null),
         assert(excludeFromSemantics != null),
+        gestureArena = gestureArena ?? UIGestureArena(),
         super(key: key);
 
   final Widget child;
@@ -405,14 +407,13 @@ class UIRawGestureDetector extends StatefulWidget {
 
   final SemanticsGestureDelegate semantics;
 
-  final UIGestureBinding gestureBinding;
+  final UIGestureArena gestureArena;
 
   @override
   _UIRawGestureDetectorState createState() => _UIRawGestureDetectorState();
 }
 
 class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
-  UIGestureBinding _gestureBinding;
   PointerDownEvent _pointerDownEvent;
   SemanticsGestureDelegate _semantics;
   Map<Type, UIGestureRecognizer> _recognizers =
@@ -422,19 +423,7 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
   void initState() {
     super.initState();
     _semantics = widget.semantics ?? _DefaultSemanticsGestureDelegate(this);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final gestureBinding =
-        (widget.gestureBinding ?? UIGestureArena.of(context)) ??
-            UIGestureBinding();
-    assert(gestureBinding != null);
-    if (_gestureBinding != gestureBinding) {
-      _gestureBinding = gestureBinding;
-      _syncAll(widget.gestures);
-    }
+    _syncAll(widget.gestures);
   }
 
   @override
@@ -443,12 +432,7 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
     if (!(oldWidget.semantics == null && widget.semantics == null)) {
       _semantics = widget.semantics ?? _DefaultSemanticsGestureDelegate(this);
     }
-    if (widget.gestureBinding != oldWidget.gestureBinding) {
-      final gestureBinding =
-          (widget.gestureBinding ?? UIGestureArena.of(context)) ??
-              UIGestureBinding();
-      assert(gestureBinding != null);
-      _gestureBinding = gestureBinding;
+    if (widget.gestureArena != oldWidget.gestureArena) {
       _syncAll(widget.gestures);
     }
   }
@@ -501,14 +485,13 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
     for (final UIGestureRecognizer recognizer in _recognizers.values) {
       recognizer.dispose();
     }
-    _gestureBinding = null;
     _recognizers = null;
     super.dispose();
   }
 
   void _syncAll(Map<Type, UIGestureRecognizerFactory> gestures) {
     assert(_recognizers != null);
-    assert(_gestureBinding != null);
+    assert(widget.gestureArena != null);
 
     final oldRecognizers = _recognizers;
     _recognizers = <Type, UIGestureRecognizer>{};
@@ -518,7 +501,7 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         assert(gestures[type]._debugAssertTypeMatches(type));
         assert(!_recognizers.containsKey(type));
         final recognizer = gestures[type].constructor()
-          ..gestureBinding = _gestureBinding;
+          ..gestureArena = widget.gestureArena;
         assert(recognizer.runtimeType == type,
             'UIGestureRecognizerFactory of type $type created a UIGestureRecognizer of type ${_recognizers[type].runtimeType}. The UIGestureRecognizerFactory must be specialized with the type of the class that it returns from its constructor method.');
         gestures[type].initializer(recognizer);
@@ -532,13 +515,13 @@ class _UIRawGestureDetectorState extends State<UIRawGestureDetector> {
         assert(!_recognizers.containsKey(type));
         final oldRecognizer = oldRecognizers.remove(type);
         if (oldRecognizer != null &&
-            oldRecognizer.gestureBinding == _gestureBinding) {
+            oldRecognizer.gestureArena == widget.gestureArena) {
           // 复用recognizer
           recognizer = oldRecognizer;
         } else {
           if (oldRecognizer != null) oldRecognizer.dispose();
           recognizer = gestures[type].constructor()
-            ..gestureBinding = _gestureBinding;
+            ..gestureArena = widget.gestureArena;
           assert(recognizer.runtimeType == type,
               'UIGestureRecognizerFactory of type $type created a UIGestureRecognizer of type ${_recognizers[type].runtimeType}. The UIGestureRecognizerFactory must be specialized with the type of the class that it returns from its constructor method.');
           gestures[type].initializer(recognizer);

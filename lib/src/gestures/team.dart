@@ -60,7 +60,7 @@ class _CombiningGestureArenaMember extends GestureArenaMember {
     assert(member is UIGestureRecognizer);
     _members.add(member);
     _entry ??= (member as UIGestureRecognizer)
-        .gestureBinding
+        .gestureArena
         .gestureArena
         .add(pointer, this);
     return _CombiningGestureArenaEntry(this, member);

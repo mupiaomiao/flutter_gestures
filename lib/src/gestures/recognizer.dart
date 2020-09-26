@@ -16,7 +16,7 @@ abstract class UIGestureRecognizer extends GestureRecognizer {
   @override
   void addPointer(PointerDownEvent event) {
     assert(
-      gestureBinding != null,
+      gestureArena != null,
       "The $runtimeType must be integrated with UIRawGestureDetector.",
     );
     super.addPointer(event);
@@ -73,7 +73,7 @@ abstract class UIOneSequenceGestureRecognizer extends UIGestureRecognizer {
   void dispose() {
     resolve(GestureDisposition.rejected);
     for (final int pointer in _trackedPointers)
-      gestureBinding.pointerRouter.removeRoute(pointer, handleEvent);
+      gestureArena.pointerRouter.removeRoute(pointer, handleEvent);
     _trackedPointers.clear();
     assert(_entries.isEmpty);
     super.dispose();
@@ -92,12 +92,12 @@ abstract class UIOneSequenceGestureRecognizer extends UIGestureRecognizer {
 
   GestureArenaEntry _addPointerToArena(int pointer) {
     if (_team != null) return _team.add(pointer, this);
-    return gestureBinding.gestureArena.add(pointer, this);
+    return gestureArena.gestureArena.add(pointer, this);
   }
 
   @protected
   void startTrackingPointer(int pointer, [Matrix4 transform]) {
-    gestureBinding.pointerRouter.addRoute(pointer, handleEvent, transform);
+    gestureArena.pointerRouter.addRoute(pointer, handleEvent, transform);
     _trackedPointers.add(pointer);
     assert(!_entries.containsValue(pointer));
     _entries[pointer] = _addPointerToArena(pointer);
@@ -106,7 +106,7 @@ abstract class UIOneSequenceGestureRecognizer extends UIGestureRecognizer {
   @protected
   void stopTrackingPointer(int pointer) {
     if (_trackedPointers.contains(pointer)) {
-      gestureBinding.pointerRouter.removeRoute(pointer, handleEvent);
+      gestureArena.pointerRouter.removeRoute(pointer, handleEvent);
       _trackedPointers.remove(pointer);
       if (_trackedPointers.isEmpty) didStopTrackingLastPointer(pointer);
     }

@@ -2,8 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 
-class UIGestureBinding {
-  UIGestureBinding() {
+class UIGestureArena {
+  UIGestureArena() {
     _pointerRouter = UIPointerRouter(_onPointerRoute);
   }
 
@@ -21,53 +21,6 @@ class UIGestureBinding {
     } else if (event is PointerSignalEvent) {
       pointerSignalResolver.resolve(event);
     }
-  }
-}
-
-class UIGestureArena extends StatelessWidget {
-  UIGestureArena({
-    Key key,
-    @required this.child,
-    UIGestureBinding binding,
-  })  : assert(child != null),
-        gestureBinding = binding ?? UIGestureBinding(),
-        super(key: key);
-
-  final Widget child;
-  final UIGestureBinding gestureBinding;
-
-  static UIGestureBinding of(BuildContext context) {
-    return _UIGestureArenaScope.of(context)?.gestureBinding;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _UIGestureArenaScope(
-      child: child,
-      gestureBinding: gestureBinding,
-    );
-  }
-}
-
-class _UIGestureArenaScope extends InheritedWidget {
-  _UIGestureArenaScope({
-    Key key,
-    @required this.child,
-    @required this.gestureBinding,
-  })  : assert(child != null),
-        assert(gestureBinding != null),
-        super(key: key, child: child);
-
-  final Widget child;
-  final UIGestureBinding gestureBinding;
-
-  static _UIGestureArenaScope of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_UIGestureArenaScope>();
-  }
-
-  @override
-  bool updateShouldNotify(_UIGestureArenaScope oldWidget) {
-    return gestureBinding != oldWidget.gestureBinding;
   }
 }
 

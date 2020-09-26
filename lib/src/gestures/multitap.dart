@@ -24,11 +24,11 @@ class _CountdownZoned {
 
 class _TapTracker {
   _TapTracker(
-    this.gestureBinding, {
+    this.gestureArena, {
     @required PointerDownEvent event,
     this.entry,
     @required Duration doubleTapMinTime,
-  })  : assert(gestureBinding != null),
+  })  : assert(gestureArena != null),
         assert(doubleTapMinTime != null),
         assert(event != null),
         assert(event.buttons != null),
@@ -43,21 +43,21 @@ class _TapTracker {
   final Offset _initialGlobalPosition;
   final int initialButtons;
   final _CountdownZoned _doubleTapMinTimeCountdown;
-  final UIGestureBinding gestureBinding;
+  final UIGestureArena gestureArena;
 
   bool _isTrackingPointer = false;
 
   void startTrackingPointer(PointerRoute route, Matrix4 transform) {
     if (!_isTrackingPointer) {
       _isTrackingPointer = true;
-      gestureBinding.pointerRouter.addRoute(pointer, route, transform);
+      gestureArena.pointerRouter.addRoute(pointer, route, transform);
     }
   }
 
   void stopTrackingPointer(PointerRoute route) {
     if (_isTrackingPointer) {
       _isTrackingPointer = false;
-      gestureBinding.pointerRouter.removeRoute(pointer, route);
+      gestureArena.pointerRouter.removeRoute(pointer, route);
     }
   }
 
@@ -118,10 +118,10 @@ class UIDoubleTapGestureRecognizer extends UIGestureRecognizer {
   void _trackFirstTap(PointerEvent event) {
     _stopDoubleTapTimer();
     final _TapTracker tracker = _TapTracker(
-      gestureBinding,
+      gestureArena,
       event: event as PointerDownEvent,
       doubleTapMinTime: kDoubleTapMinTime,
-      entry: gestureBinding.gestureArena.add(event.pointer, this),
+      entry: gestureArena.gestureArena.add(event.pointer, this),
     );
     _trackers[event.pointer] = tracker;
     tracker.startTrackingPointer(_handleEvent, event.transform);
@@ -176,14 +176,14 @@ class UIDoubleTapGestureRecognizer extends UIGestureRecognizer {
       final _TapTracker tracker = _firstTap;
       _firstTap = null;
       _reject(tracker);
-      gestureBinding.gestureArena.release(tracker.pointer);
+      gestureArena.gestureArena.release(tracker.pointer);
     }
     _clearTrackers();
   }
 
   void _registerFirstTap(_TapTracker tracker) {
     _startDoubleTapTimer();
-    gestureBinding.gestureArena.hold(tracker.pointer);
+    gestureArena.gestureArena.hold(tracker.pointer);
     _freezeTracker(tracker);
     _trackers.remove(tracker.pointer);
     _clearTrackers();
@@ -230,18 +230,18 @@ class UIDoubleTapGestureRecognizer extends UIGestureRecognizer {
 
 class _TapGesture extends _TapTracker {
   _TapGesture(
-    UIGestureBinding gestureBinding, {
+    UIGestureArena gestureArena, {
     this.gestureRecognizer,
     PointerEvent event,
     Duration longTapDelay,
-  })  : assert(gestureBinding != null),
+  })  : assert(gestureArena != null),
         _lastPosition = OffsetPair.fromEventPosition(event),
         super(
-          gestureBinding,
+          gestureArena,
           event: event as PointerDownEvent,
           doubleTapMinTime: kDoubleTapMinTime,
           entry:
-              gestureBinding.gestureArena.add(event.pointer, gestureRecognizer),
+              gestureArena.gestureArena.add(event.pointer, gestureRecognizer),
         ) {
     startTrackingPointer(handleEvent, event.transform);
     if (longTapDelay > Duration.zero) {
@@ -331,7 +331,7 @@ class UIMultiTapGestureRecognizer extends UIGestureRecognizer {
   void addAllowedPointer(PointerEvent event) {
     assert(!_gestureMap.containsKey(event.pointer));
     _gestureMap[event.pointer] = _TapGesture(
-      gestureBinding,
+      gestureArena,
       gestureRecognizer: this,
       event: event,
       longTapDelay: longTapDelay,

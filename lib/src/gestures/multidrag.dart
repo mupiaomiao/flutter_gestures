@@ -147,8 +147,8 @@ abstract class UIMultiDragGestureRecognizer<T extends UIMultiDragPointerState>
     assert(!_pointers.containsKey(event.pointer));
     final T state = createNewPointerState(event);
     _pointers[event.pointer] = state;
-    gestureBinding.pointerRouter.addRoute(event.pointer, _handleEvent);
-    state._setArenaEntry(gestureBinding.gestureArena.add(event.pointer, this));
+    gestureArena.pointerRouter.addRoute(event.pointer, _handleEvent);
+    state._setArenaEntry(gestureArena.gestureArena.add(event.pointer, this));
   }
 
   @protected
@@ -218,7 +218,7 @@ abstract class UIMultiDragGestureRecognizer<T extends UIMultiDragPointerState>
       return;
     }
     assert(_pointers.containsKey(pointer));
-    gestureBinding.pointerRouter.removeRoute(pointer, _handleEvent);
+    gestureArena.pointerRouter.removeRoute(pointer, _handleEvent);
     _pointers.remove(pointer).dispose();
   }
 
